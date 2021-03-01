@@ -20,10 +20,6 @@ import pandas as pd
 # if interested in job have bot apply for me (later)
 
 
-
-#indeed tut
-#https://www.youtube.com/watch?v=PPcgtx0sI2E
-
 def extract(page):
     headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0"}
     url = (f'https://www.indeed.com/jobs?q=remote+work+from+home+$28,000&l=remote&sort=date&start={page}')
