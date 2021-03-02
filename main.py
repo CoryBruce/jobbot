@@ -20,6 +20,9 @@ import pandas as pd
 # if interested in job have bot apply for me (later)
 
 
+
+
+
 def extract(page):
     headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0"}
     url = (f'https://www.indeed.com/jobs?q=remote+work+from+home+$28,000&l=remote&sort=date&start={page}')
@@ -87,10 +90,12 @@ def update_job_info():
     wanted_titles = jobs.split()
     print('Thank you.')
     pay = input('Please enter desired hourly wage')
-    print('Thank you. Searching database for jobs')
+    return  jobs, pay
+
+
 
 def display_full_table(list):
-    print('display table')
+    print('display table \n ------------------')
     #print(f'{len(list)} in list')
     for item in list:
         #print(item)
@@ -100,7 +105,7 @@ def display_full_table(list):
 
 def display_short_table(list):
     # this prints out index number, title, company, and pay
-    print('display table')
+    print('display table\n -----------')
     i = 1
     for item in list:
         print('\n')
@@ -118,8 +123,7 @@ def login():
     print('   ___       _     _           _    \n  |_  |     | |   | |         | |   \n    | | ___ | |__ | |__   ___ | |_  \n    | |/ _ \|  _ \|  _ \ / _ \| __| \n/\__/ / (_) | |_) | |_) | (_) | |_  \n\____/ \___/|_.__/|_.__/ \___/ \__| \n\n\n')
     user_name = input('Enter username or new for new user: ')
     if user_name == 'new':
-        #create_new_user()
-        pass
+        create_new_user()
     else:
         # load_data()
         # read user_name from data file and check for user input in file
@@ -132,11 +136,43 @@ def login():
                 # loop back through the password check or ask to enter different user_name
         pass
 
-def main():
+def create_new_user():
+    empty, empty2 = True, True
+    user = ''
+    pwd = ''
+
+
+    while empty:
+        user_name = input("Please enter your username: ")
+        answer = input(f'You entered {user_name} is that correct? \n yes/no? ')
+        answer.lower()
+        if answer == 'yes' or 'y':
+            user = user_name
+            empty = False
+        if answer == 'no':
+            pass
+    while empty2:
+        password = input('Please enter a password ')
+        password2 = input('Please enter password one more time ')
+        if password == password2:
+            pwd = password
+            empty2 = False
+        else:
+            print('Passwords dont match')
+
+
+    # need to write the user data to file
+    job_titles, desired_pay = update_job_info()
+    write_data_txtfile(user, pwd, job_titles, desired_pay)
+
+
+
+def main():# pass in data txt file
     job_results = []
-    user_name = ''
     updated = False
     update_time = ''
+    data = load_data()
+    user_name = data[0]
 
 
     running = True
@@ -208,17 +244,26 @@ def search_jobsite():
         transform(first_page, job_list)
     return job_list
 
-def write_data_txtfile():
-    # call this when user is exiting app
+def write_data_txtfile(user, password, title, pay):
+    with open('data.txt', 'w') as f:
+        f.write(user)
+        f.write('\n' + password)
+        f.write('\n' + title)
+        f.write('\n' + pay)
+
     # write filtered search results list to a text file for future use
     # write updated user info data
-    pass
+
+
 def load_data():
-    # if data.txt file:
-        # read the txt file
-        # assign user data to class values
-        # self.login = True
-    pass
+   #file_data = []
+   with open('data.txt', 'r') as f:
+        data = f.readlines()
+        #f.seek(0) #can change this to any number in the file
+        #file_data = data
+        return data
+
+
 def display_login():
     # after data is loaded this is called
     # if self.login:
@@ -233,6 +278,7 @@ def display_logo():
 def set_automation():
     #this sets up automatic searches based on times of the day and user desired times
     pass
+
 
 login()
 main()
