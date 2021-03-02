@@ -17,9 +17,8 @@ import pandas as pd
 # double check job descriptions against user search criteria
 # alert me via sms and email of job matches
 
-# if interested in job have bot apply for me (later)
-
-
+# if interested in job
+    # have bot apply for me
 
 
 
@@ -89,10 +88,8 @@ def update_job_info():
     jobs = input('Please enter desired job titles: ')
     wanted_titles = jobs.split()
     print('Thank you.')
-    pay = input('Please enter desired hourly wage')
-    return  jobs, pay
-
-
+    pay = input('Please enter desired hourly wage: ')
+    return jobs, pay
 
 def display_full_table(list):
     print('display table \n ------------------')
@@ -119,29 +116,32 @@ def display_short_table(list):
                 print(item[info])
                 i += 1
             # remember that if user enters a number off the index for here to -1 from each cause list starts at 0
+
 def login():
     print('   ___       _     _           _    \n  |_  |     | |   | |         | |   \n    | | ___ | |__ | |__   ___ | |_  \n    | |/ _ \|  _ \|  _ \ / _ \| __| \n/\__/ / (_) | |_) | |_) | (_) | |_  \n\____/ \___/|_.__/|_.__/ \___/ \__| \n\n\n')
     user_name = input('Enter username or new for new user: ')
     if user_name == 'new':
         create_new_user()
     else:
-        # load_data()
-        # read user_name from data file and check for user input in file
-        #if user_name == loaded_data.user_name:
-            #password = input(f'Thank you {user_name}, please enter password:')
-            #if password == loaded_data.password:
-                #main_menu(loaded_data)
-            #else:
-                #print('Incorrect password')
-                # loop back through the password check or ask to enter different user_name
-        pass
+        unauth = True
+        data = load_data()
+        while unauth:
+            if user_name == data[0]:
+                password = input(f'Thank you {user_name}, please enter password: ')
+                if password == data[1]:
+                    print(f'Login Successful \n Loading preferences now...')
+                    unauth = False
+                else:
+                    print('Incorrect password')
+            if user_name != data[0]:
+                print('No registered user by that name lets make an account \n')
+                unauth = False
+                create_new_user()
 
 def create_new_user():
     empty, empty2 = True, True
     user = ''
     pwd = ''
-
-
     while empty:
         user_name = input("Please enter your username: ")
         answer = input(f'You entered {user_name} is that correct? \n yes/no? ')
@@ -160,12 +160,9 @@ def create_new_user():
         else:
             print('Passwords dont match')
 
-
-    # need to write the user data to file
     job_titles, desired_pay = update_job_info()
-    write_data_txtfile(user, pwd, job_titles, desired_pay)
-
-
+    data = [user, pwd, job_titles, desired_pay]
+    write_data_txtfile(data)
 
 def main():# pass in data txt file
     job_results = []
@@ -232,7 +229,6 @@ def main():# pass in data txt file
             print('\n\n\n1. Change auto scanner time')
         if choice == 5:
             print('Please come back soon! \nExiting Jobbot..')
-            write_data_txtfile()
             running = False
             sys.exit()
 
@@ -244,25 +240,19 @@ def search_jobsite():
         transform(first_page, job_list)
     return job_list
 
-def write_data_txtfile(user, password, title, pay):
+def write_data_txtfile(list):
     with open('data.txt', 'w') as f:
-        f.write(user)
-        f.write('\n' + password)
-        f.write('\n' + title)
-        f.write('\n' + pay)
-
-    # write filtered search results list to a text file for future use
-    # write updated user info data
-
+        data = list
+        for item in data:
+            f.write(item)
+            f.write('\n')
 
 def load_data():
-   #file_data = []
    with open('data.txt', 'r') as f:
-        data = f.readlines()
-        #f.seek(0) #can change this to any number in the file
-        #file_data = data
-        return data
-
+        data = f.read()
+        new_data = data.split('\n')
+        #print(new_data[0])
+        return new_data
 
 def display_login():
     # after data is loaded this is called
