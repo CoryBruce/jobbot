@@ -22,6 +22,7 @@ import pandas as pd
 
 
 
+
 def extract(page):
     headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0"}
     url = (f'https://www.indeed.com/jobs?q=remote+work+from+home+$28,000&l=remote&sort=date&start={page}')
@@ -72,7 +73,7 @@ def create_data_table(job_list):
      df.to_csv('jobs.csv') # this creates a csv of the data frame
 
 def search_list(file, search_for):
-    print(f'Searching through {len(file)} jobs for matches')
+    #print(f'Searching through {len(file)} jobs for matches')
     results = []
     for item in file:
         #print(item)
@@ -84,10 +85,24 @@ def search_list(file, search_for):
     print(f'Found {len(results)} matching jobs!')
     return results
 
+def multi_search_list(file, search_list): # still needs a little work
+    results = []
+    list = search_list.split(' ')
+    for i in range(len(list)):
+        search_item = list[i]
+        print(f'Searching database for {search_item} jobs')
+        for item in file:
+            for info in item:
+                capitalized = search_item.capitalize()
+                #print(item[info])
+                if capitalized in item[info]:
+                    print('match')
+                    results.append(item)
+    return results
+
 def update_job_info():
     jobs = input('Please enter desired job titles: ')
-    wanted_titles = jobs.split()
-    print('Thank you.')
+    wanted_titles = jobs.split(' ')
     pay = input('Please enter desired hourly wage: ')
     return jobs, pay
 
@@ -159,31 +174,39 @@ def create_new_user():
             empty2 = False
         else:
             print('Passwords dont match')
-
     job_titles, desired_pay = update_job_info()
     data = [user, pwd, job_titles, desired_pay]
     write_data_txtfile(data)
 
 def main():# pass in data txt file
     job_results = []
+    job_preferences = []
+    user_name = ''
     updated = False
     update_time = ''
+    matches = ''
     data = load_data()
-    user_name = data[0]
+    searched = load_search_data()
+    if len(searched) > 1:
+        #print(searched[1])
+        update_time = searched[0]
+        matches = searched[1].strip('\n')
+        updated = True
+    if len(data) > 0:
+        user_name = data[0]
+        job_preferences = data[2]
 
 
     running = True
     while running:
-        #clear = lambda: os.system('cls')
-        #clear()
         print('\nJobbot \n-------------')
-        print(f'Welcome back {user_name}')
+        print(f'Welcome {user_name}')
         if updated:
-            print(f'Last search on {update_time.strftime("%Y-%m-%d %H:%M")}.\nFound {len(job_results)} matching jobs!')
-        print('\n')
-        print('\n')
+            print(f'Last search on {update_time}')
+            if len(matches) > 0:
+                print(f'Found {matches} matching jobs!')
+        print('\n \n')
         print('1.Search jobs       2.Update Info     3.Display Results    4.Automation Settings        5.Exit')
-        #choice = int(input('choice: '))
         choice = input('choice:')
         try:
             choice = int(choice)
@@ -196,10 +219,14 @@ def main():# pass in data txt file
             print('\n \n \n')
             job_list = search_jobsite()
             create_data_table(job_list)
-            results = search_list(job_list, 'Customer')
+            results = multi_search_list(job_list, job_preferences)
             update_time = datetime.now()
+            timestamp = update_time.strftime("%Y-%m-%d %H:%M")
+            update_time = timestamp
             updated = True
             job_results = results
+            matches = len(job_results)
+            write_search_file(timestamp, matches, results)
         if choice == 2:
             print('\n')
             print('Update Info')
@@ -246,6 +273,26 @@ def write_data_txtfile(list):
         for item in data:
             f.write(item)
             f.write('\n')
+
+def write_search_file(timestamp, match_number, jobs):
+    with open('jobsearch.txt', 'w') as f:
+        f.write(timestamp)
+        print(timestamp)
+        f.write(',\n')
+        matches = str(match_number)
+        f.write(matches)
+        f.write(',\n')
+        for list in jobs:
+            f.write(',\n')
+            for items in list:
+                f.write(list[items])
+                f.write('\n')
+
+def load_search_data():
+    with open('jobsearch.txt', 'r') as f:
+        data = f.read()
+        new_data = data.split(',')
+        return new_data
 
 def load_data():
    with open('data.txt', 'r') as f:
