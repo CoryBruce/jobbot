@@ -9,16 +9,15 @@ import pandas as pd
 
 
 # to do
-# get data for search from user (title, pay, remote)
-# save data for next time user uses application
-# add other sites like zip recruiter
+# update websearch to allow multiple sites searches
+# have user input state city and travel_range
+# search multisites with user input data
 # have a timer set to pull page data every so often
-    # check data for double post and remove those from list
-# double check job descriptions against user search criteria
+# check data for double post and remove those from list
 # alert me via sms and email of job matches
 
-# if interested in job have bot apply for me (later)
-
+# if interested in job
+    # have bot apply for me
 
 
 
@@ -73,7 +72,7 @@ def create_data_table(job_list):
      df.to_csv('jobs.csv') # this creates a csv of the data frame
 
 def search_list(file, search_for):
-    print(f'Searching through {len(file)} jobs for matches')
+    #print(f'Searching through {len(file)} jobs for matches')
     results = []
     for item in file:
         #print(item)
@@ -85,14 +84,42 @@ def search_list(file, search_for):
     print(f'Found {len(results)} matching jobs!')
     return results
 
+def multi_search_list(file, search_list): # still needs a little work
+    results = []
+    list = search_list.split(' ')
+    for i in range(len(list)):
+        search_item = list[i]
+        print(f'Searching database for {search_item} jobs')
+        for item in file:
+            for info in item:
+                capitalized = search_item.capitalize()
+                #print(item[info])
+                if capitalized in item[info]:
+                    #print('match')
+                    results.append(item)
+    return results
+
+def automation_check(now, auto): #just keeps looping need to work on this
+    #now = datetime.now()
+    next = now.replace(second=5)
+    while auto:
+        if now > next:
+            print('yes')
+            now = datetime.now()
+            next = now.replace(second=5)
+    #difference = now - time
+    #print(difference)
+    #if difference >= timedelta(seconds=10):
+     #   print('auto check')
+      #  time += now
+
+
+
 def update_job_info():
     jobs = input('Please enter desired job titles: ')
-    wanted_titles = jobs.split()
-    print('Thank you.')
-    pay = input('Please enter desired hourly wage')
-    return  jobs, pay
-
-
+    wanted_titles = jobs.split(' ')
+    pay = input('Please enter desired hourly wage: ')
+    return jobs, pay
 
 def display_full_table(list):
     print('display table \n ------------------')
@@ -119,29 +146,32 @@ def display_short_table(list):
                 print(item[info])
                 i += 1
             # remember that if user enters a number off the index for here to -1 from each cause list starts at 0
+
 def login():
     print('   ___       _     _           _    \n  |_  |     | |   | |         | |   \n    | | ___ | |__ | |__   ___ | |_  \n    | |/ _ \|  _ \|  _ \ / _ \| __| \n/\__/ / (_) | |_) | |_) | (_) | |_  \n\____/ \___/|_.__/|_.__/ \___/ \__| \n\n\n')
     user_name = input('Enter username or new for new user: ')
     if user_name == 'new':
         create_new_user()
     else:
-        # load_data()
-        # read user_name from data file and check for user input in file
-        #if user_name == loaded_data.user_name:
-            #password = input(f'Thank you {user_name}, please enter password:')
-            #if password == loaded_data.password:
-                #main_menu(loaded_data)
-            #else:
-                #print('Incorrect password')
-                # loop back through the password check or ask to enter different user_name
-        pass
+        unauth = True
+        data = load_data()
+        while unauth:
+            if user_name == data[0]:
+                password = input(f'Thank you {user_name}, please enter password: ')
+                if password == data[1]:
+                    print(f'Login Successful \n Loading preferences now...')
+                    unauth = False
+                else:
+                    print('Incorrect password')
+            if user_name != data[0]:
+                print('No registered user by that name lets make an account \n')
+                unauth = False
+                create_new_user()
 
 def create_new_user():
     empty, empty2 = True, True
     user = ''
     pwd = ''
-
-
     while empty:
         user_name = input("Please enter your username: ")
         answer = input(f'You entered {user_name} is that correct? \n yes/no? ')
@@ -159,34 +189,42 @@ def create_new_user():
             empty2 = False
         else:
             print('Passwords dont match')
-
-
-    # need to write the user data to file
     job_titles, desired_pay = update_job_info()
-    write_data_txtfile(user, pwd, job_titles, desired_pay)
-
-
+    data = [user, pwd, job_titles, desired_pay]
+    write_data_txtfile(data)
 
 def main():# pass in data txt file
     job_results = []
+    job_preferences = []
+    time = ''
+    user_name = ''
     updated = False
     update_time = ''
+    matches = ''
     data = load_data()
-    user_name = data[0]
+    searched = load_search_data()
+    auto = False
+    if len(searched) > 0:
+        #print(searched[1])
+        update_time = searched[0]
+        matches = searched[1].strip('\n')
+        updated = True
+    if len(data) > 0:
+        user_name = data[0]
+        job_preferences = data[2]
 
 
     running = True
     while running:
-        #clear = lambda: os.system('cls')
-        #clear()
         print('\nJobbot \n-------------')
-        print(f'Welcome back {user_name}')
+        print(f'Welcome {user_name}')
         if updated:
-            print(f'Last search on {update_time.strftime("%Y-%m-%d %H:%M")}.\nFound {len(job_results)} matching jobs!')
-        print('\n')
-        print('\n')
+            print(f'Last search on {update_time}')
+            if int(matches) > 0:
+                print(f'Found {matches} matching jobs!')
+
+        print('\n \n')
         print('1.Search jobs       2.Update Info     3.Display Results    4.Automation Settings        5.Exit')
-        #choice = int(input('choice: '))
         choice = input('choice:')
         try:
             choice = int(choice)
@@ -199,10 +237,16 @@ def main():# pass in data txt file
             print('\n \n \n')
             job_list = search_jobsite()
             create_data_table(job_list)
-            results = search_list(job_list, 'Customer')
+            results = multi_search_list(job_list, job_preferences)
             update_time = datetime.now()
+            timestamp = update_time.strftime("%Y-%m-%d %H:%M")
+            time = update_time
+            auto = True
+            update_time = timestamp
             updated = True
             job_results = results
+            matches = len(job_results)
+            write_search_file(timestamp, matches, results)
         if choice == 2:
             print('\n')
             print('Update Info')
@@ -229,10 +273,11 @@ def main():# pass in data txt file
                 # add these jobs to a saved jobs list
         if choice == 4:
             print('\nAutomation Settings\n------------------------')
-            print('\n\n\n1. Change auto scanner time')
+            now = datetime.now()
+            automation_check(now, auto)
+            #print('\n\n\n1. Change auto scanner time')
         if choice == 5:
             print('Please come back soon! \nExiting Jobbot..')
-            write_data_txtfile()
             running = False
             sys.exit()
 
@@ -244,25 +289,39 @@ def search_jobsite():
         transform(first_page, job_list)
     return job_list
 
-def write_data_txtfile(user, password, title, pay):
+def write_data_txtfile(list):
     with open('data.txt', 'w') as f:
-        f.write(user)
-        f.write('\n' + password)
-        f.write('\n' + title)
-        f.write('\n' + pay)
+        data = list
+        for item in data:
+            f.write(item)
+            f.write('\n')
 
-    # write filtered search results list to a text file for future use
-    # write updated user info data
+def write_search_file(timestamp, match_number, jobs):
+    with open('jobsearch.txt', 'w') as f:
+        f.write(timestamp)
+        #print(timestamp)
+        f.write(',\n')
+        matches = str(match_number)
+        f.write(matches)
+        f.write(',\n')
+        for list in jobs:
+            f.write(',\n')
+            for items in list:
+                f.write(list[items])
+                f.write('\n')
 
+def load_search_data():
+    with open('jobsearch.txt', 'r') as f:
+        data = f.read()
+        new_data = data.split(',')
+        return new_data
 
 def load_data():
-   #file_data = []
    with open('data.txt', 'r') as f:
-        data = f.readlines()
-        #f.seek(0) #can change this to any number in the file
-        #file_data = data
-        return data
-
+        data = f.read()
+        new_data = data.split('\n')
+        #print(new_data[0])
+        return new_data
 
 def display_login():
     # after data is loaded this is called
