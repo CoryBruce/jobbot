@@ -9,12 +9,11 @@ import pandas as pd
 
 
 # to do
-# get data for search from user (title, pay, remote)
-# save data for next time user uses application
-# add other sites like zip recruiter
+# update websearch to allow multiple sites searches
+# have user input state city and travel_range
+# search multisites with user input data
 # have a timer set to pull page data every so often
-    # check data for double post and remove those from list
-# double check job descriptions against user search criteria
+# check data for double post and remove those from list
 # alert me via sms and email of job matches
 
 # if interested in job
@@ -96,9 +95,25 @@ def multi_search_list(file, search_list): # still needs a little work
                 capitalized = search_item.capitalize()
                 #print(item[info])
                 if capitalized in item[info]:
-                    print('match')
+                    #print('match')
                     results.append(item)
     return results
+
+def automation_check(now, auto): #just keeps looping need to work on this
+    #now = datetime.now()
+    next = now.replace(second=5)
+    while auto:
+        if now > next:
+            print('yes')
+            now = datetime.now()
+            next = now.replace(second=5)
+    #difference = now - time
+    #print(difference)
+    #if difference >= timedelta(seconds=10):
+     #   print('auto check')
+      #  time += now
+
+
 
 def update_job_info():
     jobs = input('Please enter desired job titles: ')
@@ -181,13 +196,15 @@ def create_new_user():
 def main():# pass in data txt file
     job_results = []
     job_preferences = []
+    time = ''
     user_name = ''
     updated = False
     update_time = ''
     matches = ''
     data = load_data()
     searched = load_search_data()
-    if len(searched) > 1:
+    auto = False
+    if len(searched) > 0:
         #print(searched[1])
         update_time = searched[0]
         matches = searched[1].strip('\n')
@@ -203,8 +220,9 @@ def main():# pass in data txt file
         print(f'Welcome {user_name}')
         if updated:
             print(f'Last search on {update_time}')
-            if len(matches) > 0:
+            if int(matches) > 0:
                 print(f'Found {matches} matching jobs!')
+
         print('\n \n')
         print('1.Search jobs       2.Update Info     3.Display Results    4.Automation Settings        5.Exit')
         choice = input('choice:')
@@ -222,6 +240,8 @@ def main():# pass in data txt file
             results = multi_search_list(job_list, job_preferences)
             update_time = datetime.now()
             timestamp = update_time.strftime("%Y-%m-%d %H:%M")
+            time = update_time
+            auto = True
             update_time = timestamp
             updated = True
             job_results = results
@@ -253,7 +273,9 @@ def main():# pass in data txt file
                 # add these jobs to a saved jobs list
         if choice == 4:
             print('\nAutomation Settings\n------------------------')
-            print('\n\n\n1. Change auto scanner time')
+            now = datetime.now()
+            automation_check(now, auto)
+            #print('\n\n\n1. Change auto scanner time')
         if choice == 5:
             print('Please come back soon! \nExiting Jobbot..')
             running = False
@@ -277,7 +299,7 @@ def write_data_txtfile(list):
 def write_search_file(timestamp, match_number, jobs):
     with open('jobsearch.txt', 'w') as f:
         f.write(timestamp)
-        print(timestamp)
+        #print(timestamp)
         f.write(',\n')
         matches = str(match_number)
         f.write(matches)
