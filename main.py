@@ -9,18 +9,18 @@ import pandas as pd
 
 
 # to do
-# update websearch to allow multiple sites searches
-# have user input state city and travel_range
-# search multisites with user input data
-# have a timer set to pull page data every so often
-# check data for double post and remove those from list
+# have user input city and state
+# update websearch to apply user input data
+# have a timer set to run search Automation
+# check data for double post and remove those from csv
 # alert me via sms and email of job matches
 
-# if interested in job
-    # have bot apply for me
-
-
-
+def extract_local(zipcode, page):
+    headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0"}
+    url = (f'https://www.indeed.com/jobs?q=&l={zipcode}&start={page}')
+    r = requests.get(url, headers)
+    soup = BeautifulSoup(r.content, 'html.parser')
+    return soup
 
 def extract(page):
     headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0"}
@@ -113,13 +113,12 @@ def automation_check(now, auto): #just keeps looping need to work on this
      #   print('auto check')
       #  time += now
 
-
-
 def update_job_info():
-    jobs = input('Please enter desired job titles: ')
+    jobs = input('Please enter desired job titles: ') # do a loop for titles and append to jobs list instead of split
     wanted_titles = jobs.split(' ')
     pay = input('Please enter desired hourly wage: ')
-    return jobs, pay
+    zipcode = input('Please enter your zipcode: ')
+    return jobs, pay, zipcode
 
 def display_full_table(list):
     print('display table \n ------------------')
@@ -176,7 +175,7 @@ def create_new_user():
         user_name = input("Please enter your username: ")
         answer = input(f'You entered {user_name} is that correct? \n yes/no? ')
         answer.lower()
-        if answer == 'yes' or 'y':
+        if answer == 'yes' or 'y': #passing when not entering yes
             user = user_name
             empty = False
         if answer == 'no':
@@ -189,14 +188,15 @@ def create_new_user():
             empty2 = False
         else:
             print('Passwords dont match')
-    job_titles, desired_pay = update_job_info()
-    data = [user, pwd, job_titles, desired_pay]
+    job_titles, desired_pay, zipcode= update_job_info()
+    data = [user, pwd, job_titles, zipcode, desired_pay]
     write_data_txtfile(data)
 
 def main():# pass in data txt file
     job_results = []
     job_preferences = []
     time = ''
+    zip = 0
     user_name = ''
     updated = False
     update_time = ''
@@ -212,7 +212,7 @@ def main():# pass in data txt file
     if len(data) > 0:
         user_name = data[0]
         job_preferences = data[2]
-
+        zip = data[3]
 
     running = True
     while running:
@@ -235,7 +235,23 @@ def main():# pass in data txt file
             print('Searching for jobs')
             print('-------------------')
             print('\n \n \n')
-            job_list = search_jobsite()
+            search_mode = True
+            while search_mode:
+                option = input("1.Local search      2.Remote Search     3.Search Both\n ")
+                try:
+                    int(option)
+                    search_mode = False
+                except:
+                    print("Please enter one of the options")
+            if option == '1':
+               job_list = local_search_jobsite(zip)
+            if option == '2':
+                job_list = remote_search_jobsite()
+            if option == '3':
+                job_list3 = local_search_jobsite(zip)
+                job_list2 = remote_search_jobsite()
+                job_list = job_list2 + job_list3
+
             create_data_table(job_list)
             results = multi_search_list(job_list, job_preferences)
             update_time = datetime.now()
@@ -281,7 +297,15 @@ def main():# pass in data txt file
             running = False
             sys.exit()
 
-def search_jobsite():
+def local_search_jobsite(zip):
+    job_list = []
+    for i in range(0, 50, 10):  # (starting, end, increments)
+        print(f'Searching page {int(i/10) + 1}')
+        first_page = extract_local(zip, 0)
+        transform(first_page, job_list)
+    return job_list
+
+def remote_search_jobsite():
     job_list = []
     for i in range(0, 50, 10):  # (starting, end, increments)
         print(f'Searching page {int(i/10) + 1}')
@@ -341,4 +365,3 @@ def set_automation():
 
 login()
 main()
-
