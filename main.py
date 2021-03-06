@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timedelta
 import sys
 import os
 from bs4 import BeautifulSoup
@@ -8,9 +7,9 @@ import pandas as pd
 
 
 
-# to do
-# have user input city and state
-# update websearch to apply user input data
+        # TO-DO:
+# fix job titles to loop input asking for a new title each time, when empty thats end and append list
+# fix update option in menu
 # have a timer set to run search Automation
 # check data for double post and remove those from csv
 # alert me via sms and email of job matches
@@ -178,7 +177,8 @@ def create_new_user():
         if answer == 'yes' or 'y': #passing when not entering yes
             user = user_name
             empty = False
-        if answer == 'no':
+        #if answer == 'no':
+        else:
             pass
     while empty2:
         password = input('Please enter a password ')
@@ -188,11 +188,11 @@ def create_new_user():
             empty2 = False
         else:
             print('Passwords dont match')
-    job_titles, desired_pay, zipcode= update_job_info()
+    job_titles, desired_pay, zipcode = update_job_info()
     data = [user, pwd, job_titles, zipcode, desired_pay]
     write_data_txtfile(data)
 
-def main():# pass in data txt file
+def main():
     job_results = []
     job_preferences = []
     time = ''
@@ -240,7 +240,9 @@ def main():# pass in data txt file
                 option = input("1.Local search      2.Remote Search     3.Search Both\n ")
                 try:
                     int(option)
-                    search_mode = False
+                    if int(option) < 4:
+                        if int(option) > 0:
+                            search_mode = False
                 except:
                     print("Please enter one of the options")
             if option == '1':
@@ -323,7 +325,6 @@ def write_data_txtfile(list):
 def write_search_file(timestamp, match_number, jobs):
     with open('jobsearch.txt', 'w') as f:
         f.write(timestamp)
-        #print(timestamp)
         f.write(',\n')
         matches = str(match_number)
         f.write(matches)
@@ -347,17 +348,6 @@ def load_data():
         #print(new_data[0])
         return new_data
 
-def display_login():
-    # after data is loaded this is called
-    # if self.login:
-        # display login info
-    pass
-def display_logo():
-    # create a huge text logo
-    #print(-----------------------------)
-    # display_login()
-
-    pass
 def set_automation():
     #this sets up automatic searches based on times of the day and user desired times
     pass
