@@ -8,10 +8,12 @@ import pandas as pd
 
 
         # TO-DO:
-# fix job titles to loop input asking for a new title each time, when empty thats end and append list
+# check data for double post and remove those from csv -DO NEXT- job list is repeating need to find out why
+    #look at where a apply no rated job filter for issues
+
 # fix update option in menu
+# have your matches writen to csv file
 # have a timer set to run search Automation
-# check data for double post and remove those from csv
 # alert me via sms and email of job matches
 
 def extract_local(zipcode, page):
@@ -83,9 +85,18 @@ def search_list(file, search_for):
     print(f'Found {len(results)} matching jobs!')
     return results
 
+def remove_no_rated_jobs(list):
+    filtered = []
+    for item in list:
+        for info in item:
+            if 'no rating' not in item[info]:
+                filtered.append(item)
+    return filtered
+
+
 def multi_search_list(file, search_list): # still needs a little work
     results = []
-    list = search_list.split(' ')
+    list = search_list.split(',')
     for i in range(len(list)):
         search_item = list[i]
         print(f'Searching database for {search_item} jobs')
@@ -113,8 +124,14 @@ def automation_check(now, auto): #just keeps looping need to work on this
       #  time += now
 
 def update_job_info():
-    jobs = input('Please enter desired job titles: ') # do a loop for titles and append to jobs list instead of split
-    wanted_titles = jobs.split(' ')
+    getting_titles = True
+    jobs = []
+    while getting_titles:
+        job = input('Please enter desired job title (one at a time leave empty to continue): ')
+        if job == '':
+            getting_titles = False
+        else:
+            jobs.append(job)
     pay = input('Please enter desired hourly wage: ')
     zipcode = input('Please enter your zipcode: ')
     return jobs, pay, zipcode
@@ -174,10 +191,9 @@ def create_new_user():
         user_name = input("Please enter your username: ")
         answer = input(f'You entered {user_name} is that correct? \n yes/no? ')
         answer.lower()
-        if answer == 'yes' or 'y': #passing when not entering yes
+        if 'y' in answer:
             user = user_name
             empty = False
-        #if answer == 'no':
         else:
             pass
     while empty2:
@@ -189,10 +205,12 @@ def create_new_user():
         else:
             print('Passwords dont match')
     job_titles, desired_pay, zipcode = update_job_info()
-    data = [user, pwd, job_titles, zipcode, desired_pay]
+    jobs = ','.join(job_titles)
+    data = [user, pwd, jobs, zipcode, desired_pay]
     write_data_txtfile(data)
 
 def main():
+    rated_filter = False
     job_results = []
     job_preferences = []
     time = ''
@@ -246,14 +264,22 @@ def main():
                 except:
                     print("Please enter one of the options")
             if option == '1':
-               job_list = local_search_jobsite(zip)
+                job_list = local_search_jobsite(zip)
+                if rated_filter:
+                    print('filtering not rated jobs')
+                    job_list = remove_no_rated_jobs(job_list)
             if option == '2':
                 job_list = remote_search_jobsite()
+                if rated_filter:
+                    print('filtering not rated jobs')
+                    job_list = remove_no_rated_jobs(job_list)
             if option == '3':
                 job_list3 = local_search_jobsite(zip)
                 job_list2 = remote_search_jobsite()
                 job_list = job_list2 + job_list3
-
+                if rated_filter:
+                    print('filtering not rated jobs')
+                    job_list = remove_no_rated_jobs(job_list)
             create_data_table(job_list)
             results = multi_search_list(job_list, job_preferences)
             update_time = datetime.now()
@@ -290,10 +316,19 @@ def main():
                     # number = number -1
                 # add these jobs to a saved jobs list
         if choice == 4:
-            print('\nAutomation Settings\n------------------------')
+            print('\nAutomation and Settings\n------------------------')
             now = datetime.now()
             automation_check(now, auto)
-            #print('\n\n\n1. Change auto scanner time')
+            if rated_filter:
+                switch = 'on'
+            if not rated_filter:
+                switch = 'off'
+            print(f'\n\n\n1.Filter not rated jobs? {switch}\n')
+            option = input('')
+            if 'y' in option:
+                rated_filter = True
+            if 'n' in option:
+                rated_filter = False
         if choice == 5:
             print('Please come back soon! \nExiting Jobbot..')
             running = False
